@@ -13,8 +13,10 @@ multipleUpload()
 {
   for i in "$@"; do
 
-    local filePath=$(echo "$i" | sed s:"~":"$HOME":g)
-    local tempFileName=$(echo "$i" | sed "s/.*\///")
+
+    local filePath="${i//~/$HOME}"
+    local tempFileName
+    sed "s/.*\///" "$filePath" "$tempFileName"
     echo "Uploading $tempFileName"
     response=$(curl --progress-bar --upload-file "$filePath" "https://transfer.sh/$tempFileName") || { echo "Failure !"; return 1;}
     echo "Transfer File URL:"  "$response"
@@ -66,15 +68,12 @@ while getopts 'vhd' flag; do
       state=down
     ;;  
     h) 
-      state=help
       help 
     ;;
     v)
-      state=version
       echo "$currentVersion"
     ;;
-    *)
-      state=noFlag 
+    *) 
       echo "Invalid flag"
     ;;
   esac
