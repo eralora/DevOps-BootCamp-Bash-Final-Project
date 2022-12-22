@@ -66,12 +66,15 @@ while getopts 'vhd' flag; do
       state=down
     ;;  
     h) 
+      state=help
       help 
     ;;
     v)
+      state=version
       echo "$currentVersion"
     ;;
-    *) 
+    *)
+      state=noFlag 
       echo "Invalid flag"
     ;;
   esac
@@ -81,6 +84,6 @@ done
 if [ "$state" == "up" ]; then
   multipleUpload "$@"
 elif [ "$state" == "down" ]; then
-  singleDownload $2 $3 $4
+  singleDownload "$2" "$3" "$4"
   printDownloadResponse
 fi
