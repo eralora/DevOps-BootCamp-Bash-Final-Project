@@ -68,12 +68,15 @@ while getopts 'vhd' flag; do
       state=down
     ;;  
     h) 
+      state=help
       help 
     ;;
     v)
+      state=version
       echo "$currentVersion"
     ;;
-    *) 
+    *)
+      state=invalidFlag 
       echo "Invalid flag"
     ;;
   esac
