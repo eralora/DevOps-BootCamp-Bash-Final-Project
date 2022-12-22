@@ -6,7 +6,7 @@
 state=up
 
 #Version 
-currentVersion="0.0.1"
+currentVersion="1.23.0"
 
 #Upload multiple files
 multipleUpload()
