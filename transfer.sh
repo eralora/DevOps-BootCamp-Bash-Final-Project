@@ -1,28 +1,86 @@
-#!/bin/curl
+#!/bin/bash
 
+#Download and Upload file from transfer.sh
+
+
+state=up
+
+#Version 
 currentVersion="0.0.1"
 
-httpSingleUpload()
+#Upload multiple files
+multipleUpload()
 {
-    response=$(curl -A curl --upload-file "$1" "https://transfer.sh/$2") || { echo "Failure!"; return 1;}
+  for i in "$@"; do
+
+    local filePath=$(echo "$i" | sed s:"~":"$HOME":g)
+    local tempFileName=$(echo "$i" | sed "s/.*\///")
+    echo "Uploading $tempFileName"
+    response=$(curl --progress-bar --upload-file "$filePath" "https://transfer.sh/$tempFileName") || { echo "Failure !"; return 1;}
+    echo "Transfer File URL:"  "$response"
+
+  done
 }
 
-printUploadResponse()
-{
-fileID=$(echo "$response" | cut -d "/" -f 4)
-  cat <<EOF
-Transfer File URL: $response
+
+#Download single file
+singleDownload(){
+  local path="$1"
+  local id="$2"
+  local file="$3"
+  
+
+  echo Downloading "$file"
+  
+  curl --progress-bar "https://transfer.sh/$id/$file" -o "$path/$file" 
+  
+  return $?
+}
+
+printDownloadResponse(){
+  local exit_code=$?
+  if [ "$exit_code" -eq 0 ]; then
+    echo "Success!"
+  else
+    echo "Error. Downloading interupted"
+  fi
+}
+
+#Help function for helping user to understand how to work with this script
+help(){
+  cat << EOF
+    Description: Bash tool to transfer files from the command line.
+  Usage:
+    -d Download single file
+    -h Show the help
+    -v Get the tool version
+  Examples:
+  ./transfer.sh test.txt test2.txt - upload files
+  ./transfer.sh -d ./test Mij6ca test.txt - download file
 EOF
 }
 
-singleUpload()
-{
-  filePath=$(echo "$1" | sed s:"~":"$HOME":g)
-  if ! -f "$filePath" ;then { echo "Error: invalid file path"; return 1;}; fi
-  tempFileName=$(echo "$1" | sed "s/.*\///")
-  echo "Uploading $tempFileName"
-  httpSingleUpload "$filePath $tempFileName"
-}
+while getopts 'vhd' flag; do
+  case "${flag}" in
+    d) 
+      state=down
+    ;;  
+    h) 
+      help 
+    ;;
+    v)
+      echo "$currentVersion"
+    ;;
+    *) 
+      echo "Invalid flag"
+    ;;
+  esac
+done
 
-singleUpload "$1" || exit 1
-printUploadResponse
+
+if [ "$state" == "up" ]; then
+  multipleUpload "$@"
+elif [ "$state" == "down" ]; then
+  singleDownload $2 $3 $4
+  printDownloadResponse
+fi
